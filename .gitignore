@@ -1,0 +1,12 @@
+build/
+__pycache__/
+*.pyc
+# generated data and outputs (keep docs/img, which the README uses)
+data/eval_*.txt
+data/raw/
+data/cleaned.txt
+data/town_*.txt
+reports/*.txt
+reports/*.json
+reports/*.png
+.DS_Store

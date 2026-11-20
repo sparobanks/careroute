@@ -1,0 +1,37 @@
+name: ci
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure and build
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j
+
+      - name: Run C++ tests
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python deps
+        run: pip install -r requirements.txt
+
+      - name: Smoke-test the Python pipeline
+        run: |
+          python3 scripts/generate_instance.py --carers 6 --visits 30 --out data/ci.txt
+          ./build/careroute data/ci.txt --method lns --iters 500 --out reports/ci_sol.txt
+          python3 scripts/make_messy_csv.py --instance data/ci.txt --out data/raw
+          python3 scripts/clean_data.py --carers data/raw/carers.csv --visits data/raw/visits.csv --out data/ci_clean.txt --report reports/ci_report.txt
+          python3 scripts/visualise.py --instance data/ci.txt --solution reports/ci_sol.txt --out reports
